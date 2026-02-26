@@ -3,27 +3,42 @@
 **Global Spatio-Temporal Fusion of Methane & Agricultural Phenology (2020–2025)**
 
 ## 🚀 Overview
-`AgriMethane_5` is a scalable framework for correlating **Sentinel-5P CH4** concentrations with **Sentinel-2 NDVI** datasets. This project transitions from regional pilot studies to a 5-year global longitudinal analysis of agricultural emissions, providing data-driven insights into the climate impact of rice cultivation.
+`AgriMethane_5` is a high-precision framework for correlating **Sentinel-5P CH4** concentrations with agricultural production cycles. This project leverages **Coordinate-Based Cluster Sampling** to monitor methane footprints across the world's most intensive rice-growing regions over a 5-year longitudinal window (2020–2025).
 
-## 📊 Phase 1: Pilot Validation (Punjab, India)
-To validate the correlation logic, a pilot study was conducted in the Punjab region for the 2025 harvest season.
-* **Methane Spike:** Concentrations peaked at **~2000 ppb** during the transition from vegetative growth to harvest.
-* **Phenology Correlation:** The CH4 spikes synchronized with the rapid decay in NDVI (**0.55 → 0.20**), marking the period of intensive harvest activity and soil disturbance.
+## 📊 2025 Precision Audit: National Validation (India)
+To calibrate the global engine, a high-precision audit of 14 validated production hubs across India was conducted. By utilizing a **May Baseline vs. October Peak** logic, the engine isolates the "Agricultural Delta" ($\Delta$) from background industrial noise.
+
+### Key Findings:
+* **Indian Hotspot:** **Medinipur, West Bengal** recorded a maximum surge of **106.72 ppb**.
+* **Regional Pulse:** Data confirms a synchronized North-to-South methane pulse linked to harvest migration.
+
+
+
+## 🌍 Global Longitudinal Scope (2020–2025)
+The project is currently scaling the India-validated logic to a **Global Context**, targeting the primary rice deltas of Southeast Asia, East Asia, and the Americas over a 60-month observation period.
+
+* **Temporal Depth:** 5-year analysis (2020-2025) to detect shifts in emission intensity due to climate variability and irrigation changes.
+* **Spatial Breadth:** Moving beyond the Indian subcontinent to monitor global "Methane Super-Emitters" in Mekong, Red River, and Mississippi deltas.
 
 
 
 ## 🛠️ Technical Architecture
-* **Engine:** Google Earth Engine (GEE) Python API.
-* **Sensors:** TROPOMI (Trace Gas) & Sentinel-2 (Multispectral).
-* **Optimization:** Implemented robust regex-based date sterilization and `merge_asof` temporal synchronization.
-* **Environment:** Managed via Conda/Ubuntu (`earthengine-api`, `pandas`, `matplotlib`).
+* **Precision Extraction:** 30km radial buffers around coordinate-validated hubs.
+* **Engine:** Google Earth Engine (GEE) Python API with 2026 project-based authentication.
+* **Sensors:** TROPOMI (CH4) & Sentinel-2 (NDVI).
+* **Optimization:** `merge_asof` temporal synchronization for multi-sensor data fusion.
 
-## 🗺️ Global Roadmap
-- [x] **Phase 1:** Pipeline architecture and regional validation in Punjab.
-- [ ] **Phase 2:** Global expansion to Southeast Asian and East Asian rice deltas (2020-2025).
-- [ ] **Phase 3:** Integration of **Sentinel-1 (SAR)** data to monitor irrigation and flooding patterns.
-- [ ] **Phase 4:** Development of a "Methane Super-Emitter" anomaly detection model.
+## 🗺️ Roadmap
+- [x] **Phase 1:** Pipeline architecture and Punjab regional pilot.
+- [x] **Phase 2:** Precision expansion to **14 National Clusters** (India validation).
+- [ ] **Phase 3:** **Longitudinal Expansion:** Scaling to a 5-year longitudinal window (2020–2025) across Indian clusters to identify climate-driven emission trends.
+- [ ] **Phase 4:** **Global Scale-up:** Implementing the validated engine across major global rice deltas (Mekong, Red River, and Mississippi).
+- [ ] **Phase 5:** **SAR Integration:** Fusion with **Sentinel-1 (SAR)** data to correlate flood-paddy irrigation cycles with real-time CH4 flux.
 
 ## 📂 Repository Structure
-* `engine.py`: Core processing logic and GEE integration.
+* `engine.py`: Core extraction logic supporting multi-year/multi-region queries.
+* `methane_precision_2025.csv`: The 14-cluster Indian validation dataset.
 * `requirements.txt`: Environment dependencies.
+
+---
+*Developed for IIRS Project 2026*
