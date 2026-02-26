@@ -1,70 +1,104 @@
 import ee
 import pandas as pd
-import re
+import seaborn as sns
 import matplotlib.pyplot as plt
 
-def initialize_gee(project_id):
-    """Initializes Google Earth Engine."""
-    ee.Initialize(project=project_id)
+# Authenticate and initialize Earth Engine
+try:
+    ee.Initialize(project='Methane_Project') # Replace it with your own! 
+    print("🚀 Earth Engine Initialized.")
+except Exception as e:
+    ee.Authenticate()
+    ee.Initialize()
 
-def get_methane_data(roi, start_date, end_date):
-    """Extracts CH4 data from Sentinel-5P."""
-    col = (ee.ImageCollection('COPERNICUS/S5P/OFFL/L3_CH4')
-           .filterBounds(roi)
-           .filterDate(start_date, end_date)
-           .select('CH4_column_volume_mixing_ratio_dry_air'))
+# Define all the precision clusters for extraction (14 for India)
+rice_sites = [
+    {'name': 'Ludhiana', 'state': 'Punjab', 'coords': [75.85, 30.90]},
+    {'name': 'Sangrur', 'state': 'Punjab', 'coords': [75.83, 30.22]},
+    {'name': 'Bareilly', 'state': 'Uttar Pradesh', 'coords': [79.41, 28.36]},
+    {'name': 'Gorakhpur', 'state': 'Uttar Pradesh', 'coords': [83.37, 26.76]},
+    {'name': 'Rohtas', 'state': 'Bihar', 'coords': [83.98, 24.93]},
+    {'name': 'Madhubani', 'state': 'Bihar', 'coords': [86.08, 26.35]},
+    {'name': 'Bardhaman', 'state': 'West Bengal', 'coords': [87.86, 23.23]},
+    {'name': 'Medinipur', 'state': 'West Bengal', 'coords': [87.32, 22.42]},
+    {'name': 'Nizamabad', 'state': 'Telangana', 'coords': [78.10, 18.67]},
+    {'name': 'Karimnagar', 'state': 'Telangana', 'coords': [79.13, 18.43]},
+    {'name': 'Godavari Delta', 'state': 'Andhra Pradesh', 'coords': [82.24, 16.98]},
+    {'name': 'Nellore', 'state': 'Andhra Pradesh', 'coords': [79.98, 14.44]},
+    {'name': 'Thanjavur', 'state': 'Tamil Nadu', 'coords': [79.13, 10.78]},
+    {'name': 'Thiruvarur', 'state': 'Tamil Nadu', 'coords': [79.64, 10.77]}
+]
 
-    def extract_stats(img):
-        val = img.reduceRegion(
+# Order for geographical visualization
+north_to_south_order = [
+    'Ludhiana', 'Sangrur', 'Bareilly', 'Gorakhpur', 
+    'Rohtas', 'Madhubani', 'Bardhaman', 'Medinipur', 
+    'Nizamabad', 'Karimnagar', 'Godavari Delta', 'Nellore', 
+    'Thanjavur', 'Thiruvarur'
+]
+
+# Extraction function for Sentinel-5P Methane data
+def analyze_site(site):
+    print(f"🎯 Targeting: {site['name']}, {site['state']}")
+    roi = ee.Geometry.Point(site['coords']).buffer(30000) # 30km buffer
+    
+    ch4_col = (ee.ImageCollection('COPERNICUS/S5P/OFFL/L3_CH4')
+               .filterBounds(roi)
+               .filterDate('2025-01-01', '2025-12-31')
+               .select('CH4_column_volume_mixing_ratio_dry_air'))
+    
+    site_data = []
+    for month in range(1, 13):
+        start = f'2025-{month:02d}-01'
+        end = ee.Date(start).advance(1, 'month')
+        
+        monthly_val = ch4_col.filterDate(start, end).mean().reduceRegion(
             reducer=ee.Reducer.mean(),
             geometry=roi,
-            scale=7000,
-            bestEffort=True
-        ).get('CH4_column_volume_mixing_ratio_dry_air')
-        return ee.Feature(None, {'date': img.date().format('YYYY-MM-DD'), 'ch4': val})
+            scale=7000
+        ).get('CH4_column_volume_mixing_ratio_dry_air').getInfo()
+        
+        if monthly_val:
+            site_data.append({
+                'month': month, 'ch4': monthly_val,
+                'area': site['name'], 'state': site['state']
+            })
+    return site_data
 
-    features = col.map(extract_stats).filter(ee.Filter.notNull(['ch4'])).getInfo()
-    return pd.DataFrame([f['properties'] for f in features['features']])
+# Execute extraction loop
+final_results = []
+for site in rice_sites:
+    try:
+        data = analyze_site(site)
+        final_results.extend(data)
+    except Exception as e:
+        print(f"⚠️ Error at {site['name']}: {e}")
 
-def get_ndvi_data(roi, start_date, end_date):
-    """Extracts NDVI data from Sentinel-2."""
-    s2 = (ee.ImageCollection('COPERNICUS/S2_SR_HARMONIZED')
-          .filterBounds(roi)
-          .filterDate(start_date, end_date)
-          .filter(ee.Filter.lt('CLOUDY_PIXEL_PERCENTAGE', 20)))
+# Save data to CSV
+df_precision = pd.DataFrame(final_results)
+df_precision.to_csv('methane_precision_2025.csv', index=False)
 
-    def calc_ndvi(img):
-        ndvi = img.normalizedDifference(['B8', 'B4']).rename('NDVI')
-        mean_val = ndvi.reduceRegion(ee.Reducer.mean(), roi, 100).get('NDVI')
-        return ee.Feature(None, {'date': img.date().format('YYYY-MM-DD'), 'ndvi': mean_val})
+# Pivot data for analysis
+pivot_df = df_precision.pivot_table(index='area', columns='month', values='ch4')
 
-    features = s2.map(calc_ndvi).filter(ee.Filter.notNull(['ndvi'])).getInfo()
-    return pd.DataFrame([f['properties'] for f in features['features']])
-
-def clean_and_merge(df_ch4, df_ndvi):
-    """Cleans malformed dates and merges datasets."""
-    def clean_date(s):
-        match = re.search(r'(\d{4}-\d{2}-\d{2})', str(s))
-        return match.group(1) if match else None
-
-    for df in [df_ch4, df_ndvi]:
-        df['date_dt'] = pd.to_datetime(df['date'].apply(clean_date), errors='coerce')
-        df.dropna(subset=['date_dt'], inplace=True)
-        df.sort_values('date_dt', inplace=True)
-
-    return pd.merge_asof(df_ch4, df_ndvi[['date_dt', 'ndvi']], on='date_dt', direction='nearest')
-
-if __name__ == "__main__":
-    # === USER CONFIGURATION ===
-    # Replace with your Google Earth Engine Project ID
-    PROJECT_ID = 'YOUR_PROJECT_ID_HERE' 
+# Calculate the Methane Delta (October vs May)
+if 5 in pivot_df.columns and 10 in pivot_df.columns:
+    methane_delta = (pivot_df[10] - pivot_df[5]).dropna().sort_values(ascending=False)
+    print("\n🏆 LEADERBOARD (Agricultural Surge):")
+    print(methane_delta.round(2))
     
-    # Define your Area of Interest (Default: Punjab Pilot Region)
-    ROI_COORDINATES = [75.8573, 30.9010]
-    BUFFER_DISTANCE = 15000 
-    # ==========================
+    # Save Delta Bar Chart
+    plt.figure(figsize=(12, 6))
+    methane_delta.plot(kind='bar', color='darkorange')
+    plt.title('Methane Increase: May to Oct 2025')
+    plt.ylabel('Delta CH4 (ppb)')
+    plt.tight_layout()
+    plt.savefig('methane_delta.png')
 
-    print(f"Initializing AgriMethane_5 Engine with project: {PROJECT_ID}...")
-    initialize_gee(PROJECT_ID)
-    
-    PUNJAB_ROI = ee.Geometry.Point(ROI_COORDINATES).buffer(BUFFER_DISTANCE)
+# Generate and save spatiotemporal heatmap
+heatmap_data = pivot_df.reindex(north_to_south_order)
+plt.figure(figsize=(16, 9))
+sns.heatmap(heatmap_data, cmap='YlOrRd', annot=True, fmt=".1f")
+plt.title('2025 Methane Pulse across Indian Rice Clusters')
+plt.savefig('methane_heatmap.png')
+plt.show()
