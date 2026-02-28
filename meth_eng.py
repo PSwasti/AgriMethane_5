@@ -6,12 +6,12 @@ import matplotlib.pyplot as plt
 # Authenticate and initialize Earth Engine
 try:
     ee.Initialize(project='Methane_Project') # Replace it with your own! 
-    print("🚀 Earth Engine Initialized.")
+    print("🚀 Earth Engine Initialized for a 5-year 'All India Study'! \n We're looking at 14 precision clusters across the 7 most rice producing states in India!")
 except Exception as e:
     ee.Authenticate()
     ee.Initialize()
 
-# Define all the precision clusters for extraction (14 for India)
+# Define all the 14 precision clusters for extraction
 rice_sites = [
     {'name': 'Ludhiana', 'state': 'Punjab', 'coords': [75.85, 30.90]},
     {'name': 'Sangrur', 'state': 'Punjab', 'coords': [75.83, 30.22]},
@@ -34,71 +34,77 @@ north_to_south_order = [
     'Ludhiana', 'Sangrur', 'Bareilly', 'Gorakhpur', 
     'Rohtas', 'Madhubani', 'Bardhaman', 'Medinipur', 
     'Nizamabad', 'Karimnagar', 'Godavari Delta', 'Nellore', 
-    'Thanjavur', 'Thiruvarur'
-]
+    'Thanjavur', 'Thiruvarur']
 
-# Extraction function for Sentinel-5P Methane data
-def analyze_site(site):
-    print(f"🎯 Targeting: {site['name']}, {site['state']}")
+# Extraction function (Updated to except the "year" parameter)
+def analyze_site(site, year):
     roi = ee.Geometry.Point(site['coords']).buffer(30000) # 30km buffer
     
     ch4_col = (ee.ImageCollection('COPERNICUS/S5P/OFFL/L3_CH4')
                .filterBounds(roi)
-               .filterDate('2025-01-01', '2025-12-31')
+               .filterDate(f'{year}-01-01', f'{year}-12-31')
                .select('CH4_column_volume_mixing_ratio_dry_air'))
     
-    site_data = []
+    site_year_data = []
     for month in range(1, 13):
-        start = f'2025-{month:02d}-01'
+        # Progress heartbeat
+        print(f"📡 Processing: {year} | 🎯 Targeting: {site['name']}, {site['state']}"| Month {month:02d}...", end="\r")
+        
+        start = f'{year}-{month:02d}-01'
         end = ee.Date(start).advance(1, 'month')
         
-        monthly_val = ch4_col.filterDate(start, end).mean().reduceRegion(
-            reducer=ee.Reducer.mean(),
-            geometry=roi,
-            scale=7000
-        ).get('CH4_column_volume_mixing_ratio_dry_air').getInfo()
-        
-        if monthly_val:
-            site_data.append({
-                'month': month, 'ch4': monthly_val,
-                'area': site['name'], 'state': site['state']
-            })
-    return site_data
+        try:
+            monthly_val = ch4_col.filterDate(start, end).mean().reduceRegion(
+                reducer=ee.Reducer.mean(),
+                geometry=roi,
+                scale=7000
+            ).get('CH4_column_volume_mixing_ratio_dry_air').getInfo()
+            
+            if monthly_val:
+                site_year_data.append({
+                    'year': year, 'month': month, 'ch4': monthly_val,
+                    'area': site['name'], 'state': site['state']
+                })
+        except Exception:
+            continue
+    return site_year_data
 
-# Execute extraction loop
+# 3. Execute longitudinal extraction loop (2021-2025)
 final_results = []
-for site in rice_sites:
-    try:
-        data = analyze_site(site)
-        final_results.extend(data)
-    except Exception as e:
-        print(f"⚠️ Error at {site['name']}: {e}")
+for year in range(2021, 2026):
+    print(f"\n📅 Starting Extraction for Year: {year}")
+    for site in rice_sites:
+        try:
+            data = analyze_site(site, year)
+            final_results.extend(data)
+        except Exception as e:
+            print(f"⚠️ Error at {site['name']} in {year}: {e}")
 
-# Save data to CSV
-df_precision = pd.DataFrame(final_results)
-df_precision.to_csv('methane_precision_2025.csv', index=False)
+# 4. Save data
+df_long = pd.DataFrame(final_results)
+df_long.to_csv('methane_extraction_2021_2025.csv', index=False)
+print("\n\n✅ 5-Year Extraction Complete!")
 
-# Pivot data for analysis
-pivot_df = df_precision.pivot_table(index='area', columns='month', values='ch4')
+# 5. FacetGrid: The 14-Site Gallery (The core visual)
+sns.set_theme(style="whitegrid")
+g = sns.FacetGrid(df_long, col="area", hue="year", col_wrap=2, 
+                  height=4, aspect=1.5, palette='viridis')
+g.map(sns.lineplot, "month", "ch4", marker='o')
+g.set_axis_labels("Month", "CH4 (ppb)")
+g.set_titles(col_template="{col_name}")
+g.add_legend(title="Year")
+plt.subplots_adjust(top=0.92, hspace=0.4)
+g.fig.suptitle('5-Year Methane Pulse: 14 Precision Clusters', fontsize=20)
+plt.savefig('national_gallery_2021_2025.png', dpi=300)
 
-# Calculate the Methane Delta (October vs May)
-if 5 in pivot_df.columns and 10 in pivot_df.columns:
-    methane_delta = (pivot_df[10] - pivot_df[5]).dropna().sort_values(ascending=False)
-    print("\n🏆 LEADERBOARD (Agricultural Surge):")
-    print(methane_delta.round(2))
-    
-    # Save Delta Bar Chart
-    plt.figure(figsize=(12, 6))
-    methane_delta.plot(kind='bar', color='darkorange')
-    plt.title('Methane Increase: May to Oct 2025')
-    plt.ylabel('Delta CH4 (ppb)')
-    plt.tight_layout()
-    plt.savefig('methane_delta.png')
-
-# Generate and save spatiotemporal heatmap
-heatmap_data = pivot_df.reindex(north_to_south_order)
+# 6. Spatiotemporal Heatmap (Averaged across 5 years to show geographical 'Zones')
+# This bridges the 1-year heatmap logic to the new 5-year data
+pivot_all = df_long.groupby(['area', 'month'])['ch4'].mean().unstack()
+heatmap_data = pivot_all.reindex(north_to_south_order)
 plt.figure(figsize=(16, 9))
 sns.heatmap(heatmap_data, cmap='YlOrRd', annot=True, fmt=".1f")
-plt.title('2025 Methane Pulse across Indian Rice Clusters')
+plt.title('Multi-Year Mean Methane Pulse (North to South 2021-2025)')
 plt.savefig('methane_heatmap.png')
+
 plt.show()
+
