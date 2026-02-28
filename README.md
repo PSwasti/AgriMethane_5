@@ -32,13 +32,8 @@ The project is currently scaling the India-validated logic to a **Global Context
 - [x] **Phase 1:** Pipeline architecture and Punjab regional pilot.
 - [x] **Phase 2:** Precision expansion to **14 National Clusters** (India validation).
 - [x] **Phase 3:** **Longitudinal Expansion:** Scaling to a 5-year longitudinal window (2020–2025) across Indian clusters to identify climate-driven emission trends.
-- [ ] **Phase 4:** **Global Scale-up:** Implementing the validated engine across major global rice deltas (Mekong, Red River, and Mississippi).
-- [ ] **Phase 5:** **SAR Integration:** Fusion with **Sentinel-1 (SAR)** data to correlate flood-paddy irrigation cycles with real-time CH4 flux.
+- [x] **Phase 4:** **Global Scale-up:** Implementing the validated engine across major global rice deltas (example Mekong).
 
-## 📂 Repository Structure
-* `engine.py`: Core extraction logic supporting multi-year/multi-region queries.
-* `methane_precision_2025.csv`: The 14-cluster Indian validation dataset.
-* `requirements.txt`: Environment dependencies.
 
 ---
 *Developed for IIRS Project 2026*
