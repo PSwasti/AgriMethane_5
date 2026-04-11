@@ -1,39 +1,42 @@
 # AgriMethane_5 🛰️🌍
 
-**Global Spatio-Temporal Fusion of Methane & Agricultural Phenology (2020–2025)**
+**Global Multivariate Fusion of Methane, Thermal, & Soil Moisture Dynamics (2021–2025)**
 
 ## 🚀 Overview
-`AgriMethane_5` is a high-precision framework for correlating **Sentinel-5P CH4** concentrations with agricultural production cycles. This project leverages **Coordinate-Based Cluster Sampling** to monitor methane footprints across the world's most intensive rice-growing regions over a 5-year longitudinal window (2020–2025).
+`AgriMethane_5` is a high-precision framework designed to solve the "Climate Paradox" of agricultural emissions. By synchronizing **TROPOMI (CH4)** mixing ratios with **MODIS** thermal data and **NASA SMAP** volumetric soil moisture, the engine identifies the non-linear triggers of methane surges across the world's intensive rice-growing regions.
 
-## 📊 2025 Precision Audit: National Validation (India)
-To calibrate the global engine, a high-precision audit of 14 validated production hubs across India was conducted. By utilizing a **May Baseline vs. October Peak** logic, the engine isolates the "Agricultural Delta" ($\Delta$) from background industrial noise.
+## 🛠️ Project Evolution: Step-by-Step
+The project followed a rigorous **5-Phase Engineering Lifecycle** to move from a regional hypothesis to a global audit.
 
-### Key Findings:
-* **Indian Hotspot:** **Medinipur, West Bengal** recorded a maximum surge of **106.72 ppb**.
-* **Regional Pulse:** Data confirms a synchronized North-to-South methane pulse linked to harvest migration.
+### Phase 1: The Regional Prototype (Punjab Pilot)
+* **Goal:** Establish a baseline correlation between methane and land temperature.
+* **Tech:** Sentinel-5P (TROPOMI) + MODIS LST.
+* **Result:** Confirmed a seasonal "Methane Pulse" in the Punjab belt, identifying a direct relationship between surface heat and gas release.
 
+### Phase 2: National Validation (14-Cluster Audit)
+* **Goal:** Scale the prototype to 14 production hubs across India to eliminate regional bias.
+* **Tech:** GEE Python API + Coordinate-Based Cluster Sampling.
+* **Result:** Identified **Medinipur, West Bengal** as a major hotspot (106.72 ppb surge) and mapped a North-to-South "Harvest Pulse."
 
+### Phase 3: Solving the "Climate Paradox" (Triple-Sensor Fusion)
+* **Goal:** Solve why heat sometimes *suppresses* methane. 
+* **Tech:** Integration of **NASA SMAP (v008)** soil moisture data.
+* **Result:** Discovered the **"Detonation Zone"**—methane only surges when Temp > 30°C and Moisture > 0.3.
 
-## 🌍 Global Longitudinal Scope (2020–2025)
-The project is currently scaling the India-validated logic to a **Global Context**, targeting the primary rice deltas of Southeast Asia, East Asia, and the Americas over a 60-month observation period.
+### Phase 4: Infrastructure Overclocking (Agentic Refactoring)
+* **Goal:** Move from manual scripts to a "Zero-Failure" robust pipeline.
+* **Tech:** **Claude Code** & **Cursor** for automated API bridge refactoring (Python-to-JS).
+* **Result:** Created a headless `.py` engine capable of processing terabyte-scale geospatial streams with automatic error-handling for orbital gaps.
 
-* **Temporal Depth:** 5-year analysis (2020-2025) to detect shifts in emission intensity due to climate variability and irrigation changes.
-* **Spatial Breadth:** Moving beyond the Indian subcontinent to monitor global "Methane Super-Emitters" in Mekong, Red River, and Mississippi deltas.
+### Phase 5: Global Longitudinal Scaling (60-Month Audit)
+* **Goal:** Apply the validated "Detonation" logic to global river deltas.
+* **Targets:** Amazon (Brazil), Mekong (Vietnam), Congo (DRC), and Lena River (Siberia).
+* **Result:** Proved that while India is "Moisture-Limited," the Arctic is "Thermal-Limited," creating a unified global fingerprint for climate-driven methane surges.
 
-
-
-## 🛠️ Technical Architecture
-* **Precision Extraction:** 30km radial buffers around coordinate-validated hubs.
-* **Engine:** Google Earth Engine (GEE) Python API with 2026 project-based authentication.
-* **Sensors:** TROPOMI (CH4) & Sentinel-2 (NDVI).
-* **Optimization:** `merge_asof` temporal synchronization for multi-sensor data fusion.
-
-## 🗺️ Roadmap
-- [x] **Phase 1:** Pipeline architecture and Punjab regional pilot.
-- [x] **Phase 2:** Precision expansion to **14 National Clusters** (India validation).
-- [x] **Phase 3:** **Longitudinal Expansion:** Scaling to a 5-year longitudinal window (2020–2025) across Indian clusters to identify climate-driven emission trends.
-- [x] **Phase 4:** **Global Scale-up:** Implementing the validated engine across major global rice deltas (example Mekong).
-
+## 📊 Technical Architecture
+* **Sensors:** Sentinel-5P (CH4), MODIS (LST 1km), and NASA SMAP (9km v008 EASE-Grid).
+* **Engine:** Google Earth Engine (GEE) Python API.
+* **Analytics:** Multivariate OLS Regression (statsmodels).
 
 ---
 *Developed for IIRS Project 2026*
